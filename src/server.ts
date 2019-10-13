@@ -2,6 +2,7 @@ import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import { filterImageFromURL, deleteLocalFiles } from './util/util';
+import morgan from 'morgan';
 
 (async () => {
   // Init the Express application
@@ -12,6 +13,8 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
+
+  app.use(morgan('short'));
 
   // Root Endpoint
   // Displays a simple message to the user
