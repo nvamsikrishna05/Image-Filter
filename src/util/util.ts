@@ -11,19 +11,11 @@ import path from 'path';
 //    an absolute path to a filtered image locally saved file
 export async function filterImageFromURL(inputURL: string): Promise<string> {
   return new Promise(async resolve => {
-    console.log(inputURL);
+    console.log(`Processing the Image @ ${inputURL}`);
     const photo = await Jimp.read(inputURL);
+
     const outpath =
       '/tmp/filtered-' + Math.floor(Math.random() * 2000) + '.png';
-
-    console.log(photo);
-    console.log(path.join(__dirname + outpath));
-    photo.write(path.join(__dirname + outpath), error => {
-      if (error) {
-        console.log(`Error Occured while saving the image : ${error}`);
-      }
-      console.log(error);
-    });
 
     await photo
       .resize(256, 256) // resize
@@ -41,7 +33,9 @@ export async function filterImageFromURL(inputURL: string): Promise<string> {
 // INPUTS
 //    files: Array<string> an array of absolute paths to files
 export async function deleteLocalFiles(files: Array<string>) {
+  console.log('Deleting the local files on the server');
   for (let file of files) {
     fs.unlinkSync(file);
   }
+  console.log('Files have been deleted successfully');
 }
