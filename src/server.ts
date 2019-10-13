@@ -1,5 +1,5 @@
 import express from 'express';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import { filterImageFromURL, deleteLocalFiles } from './util/util';
 
@@ -25,27 +25,40 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
   //    image_url: URL of a publicly accessible image
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
-  app.get('/filteredimage', async (req: Request, res: Response) => {
-    // const { image_url } = req.query;
-    const image_url = req.query.image_url;
+  app.get(
+    '/filteredimage',
+    async (req: Request, res: Response, next: NextFunction) => {
+      // const { image_url } = req.query;
+      const image_url = req.query.image_url;
 
-    if (!image_url) {
-      return res.status(400).send(`try GET /filteredimage?image_url=IMAGE_URL`);
+      if (!image_url) {
+        return res
+          .status(400)
+          .send(`try GET /filteredimage?image_url=IMAGE_URL`);
+      }
+
+      try {
+        console.log('Starting the filtering of the image');
+        const filtered_image = await filterImageFromURL(image_url);
+        const filtered_images = [filtered_image];
+
+        res.status(200).sendFile(filtered_image, async (error: Error) => {
+          if (error) {
+            next(error);
+          }
+          await deleteLocalFiles(filtered_images);
+        });
+      } catch (err) {
+        console.log(err.message);
+        return res.status(500).send('Error Occured while filtering the image.');
+      }
     }
+  );
 
-    try {
-      console.log('Starting the filtering of the image');
-      const filtered_image = await filterImageFromURL(image_url);
-
-      res.status(200).sendFile(filtered_image);
-
-      console.log('Deleting the local files on the server');
-      const filtered_images = [filtered_image];
-      await deleteLocalFiles(filtered_images);
-    } catch (err) {
-      console.log(err.message);
-      return res.status(500).send('Error Occured while filtering the image.');
-    }
+  // Global Error Handling Middleware
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.log(err.message);
+    res.status(500).send('Error occured while filtering the image');
   });
 
   // Start the Server
